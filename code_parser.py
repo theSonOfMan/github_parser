@@ -7,19 +7,27 @@ def file_dowloader():
 		for link in links_file:
 			link = link[:-1]
 			data = link.split('/', 6)
-			data = {'user' : data[3], 'branch' : data[5], 'filename' : data[-1]}
+			user = data[3]
+			data = {'branch' : data[5], 'filename' : data[-1]}
 			print(data)
+			
 			r = requests.get(link)
 			# print(link)
-			assert r.status_code == 200
-			# print(r.status_code)
-			# break
+			# assert r.status_code == 200
+
 			if link[-3:] == '.py':
 				print('got python raw')
-				files.append({**data, **python_file_parser(r.text)})
-			else:
+				file = {**data, **python_file_parser(r.text)}
+			elif link[-6:] == '.ipynb':
 				print('got notebook')
-				files.append({**data, **notebook_parser(r.text)})
+				file = {**data, **notebook_parser(r.text)}
+			
+			for entry in files:
+				if entry['user'] == user:
+					entry['files'].append(file)
+					break
+			else:
+				files.append({'user' : user, 'files' : [file,]})
 
 	with open('files.json', 'w') as result:
 		json.dump(files, result)
